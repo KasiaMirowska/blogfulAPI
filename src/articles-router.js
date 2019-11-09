@@ -42,24 +42,49 @@ articlesRouter
     })
 
 articlesRouter
-    .route('/articles/:article_id')
-    .get( (req, res,next) => {
+
+    .route('/api/articles/:article_id')
+    .all( (req, res,next) => {
         const requestedId = req.params.article_id
         const knexInstance = req.app.get('db');
         ArticlesService.getById(knexInstance, requestedId)
-            .then(article => {
+            .then(article => 
+                {
                 if(!article){
-                    return res.status(404).json({
+                    return res.status(404).send({
                         error: {message: "Article doesn't exist"}
                     })
                 }
-                res.json(serializeArticle(article))
+                article = res.article;
+                next()
             })
             .catch(next)
     })
+    .get((req, res, next) => {
+        res.json(serializeArticle(article))
+    })
     .delete((req,res,next) => {
         const knexInstance = req.app.get('db');
-        ArticlesService.deleteArticle(knexInstance, req.params.article_id)
+        ArticlesService.deleteArticle(knexInstance, req.params.id)
+            .then(() => {
+                res.status(204).end()
+            })
+            .catch(next)
+    })
+    .patch(jsonParser, (req, res, next) => {
+        const knexInstance = req.app.get('db');
+        const { article_id } = req.params;
+        const { title, content, style } = req.body;
+        const articleToUpdate = { title, content, style };
+        
+        const numberOfValues = Object.values(articleToUpdate).filter(Boolean).length
+        if(numberOfValues === 0){
+            return res.status(400).json({
+                error: {message: "Request must contain either 'title', or 'content', or 'style'"}
+            })
+        }
+    
+        ArticlesService.updateArticle(knexInstance, article_id, articleToUpdate )
             .then(() => {
                 res.status(204).end()
             })
