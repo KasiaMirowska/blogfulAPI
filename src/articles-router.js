@@ -13,7 +13,7 @@ const serializeArticle = article => ({
   })
 
 articlesRouter  
-    .route('/articles')
+    .route('/api/articles')
     .get((req, res, next) => {
         const knexInstance = req.app.get('db');
         ArticlesService.getAllArticles(knexInstance)
@@ -47,25 +47,26 @@ articlesRouter
     .all( (req, res,next) => {
         const requestedId = req.params.article_id
         const knexInstance = req.app.get('db');
+    
         ArticlesService.getById(knexInstance, requestedId)
             .then(article => 
                 {
                 if(!article){
-                    return res.status(404).send({
+                    return res.status(404).json({
                         error: {message: "Article doesn't exist"}
                     })
                 }
-                article = res.article;
+                res.article = article;
                 next()
             })
             .catch(next)
     })
     .get((req, res, next) => {
-        res.json(serializeArticle(article))
+        res.json(serializeArticle(res.article))
     })
     .delete((req,res,next) => {
         const knexInstance = req.app.get('db');
-        ArticlesService.deleteArticle(knexInstance, req.params.id)
+        ArticlesService.deleteArticle(knexInstance, req.params.article_id)
             .then(() => {
                 res.status(204).end()
             })
@@ -76,7 +77,7 @@ articlesRouter
         const { article_id } = req.params;
         const { title, content, style } = req.body;
         const articleToUpdate = { title, content, style };
-        
+       
         const numberOfValues = Object.values(articleToUpdate).filter(Boolean).length
         if(numberOfValues === 0){
             return res.status(400).json({
