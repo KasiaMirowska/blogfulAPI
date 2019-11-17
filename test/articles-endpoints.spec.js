@@ -2,6 +2,7 @@ const { expect } = require('chai')
 const knex = require('knex')
 
 const { makeArticlesArray, makeMaliciousArticle } = require('./articles.fixtures')
+const { makeUsersArray } = require('./users.fixtures')
 const app = require('../src/app')
 
 describe.only('Articles endpoints', function () {
@@ -15,8 +16,9 @@ describe.only('Articles endpoints', function () {
     app.set('db', db);
   })
   after('disconnect from db', () => db.destroy());
-  before('clean the table', () => db('blogful_articles').truncate());
-  afterEach('cleanup', () => db('blogful_articles').truncate());
+  before('clean the table', () => db.raw('TRUNCATE blogful_articles, blogful_users, blogful_comments RESTART IDENTITY CASCADE'))
+
+  afterEach('cleanup',() => db.raw('TRUNCATE blogful_articles, blogful_users, blogful_comments RESTART IDENTITY CASCADE'))
 
   describe(`GET /articles`, () => {
     context('Given no articles', () => {
@@ -28,6 +30,7 @@ describe.only('Articles endpoints', function () {
     })
 
     context('Given there are articles in the database', () => {
+      const testUsers = makeUsersArray();
       const testArticles = makeArticlesArray()
 
       beforeEach('insert articles', () => {
@@ -73,6 +76,7 @@ describe.only('Articles endpoints', function () {
     })
 
     context('Given there are articles in the database', () => {
+      const testUsers = makeUsersArray();
       const testArticles = makeArticlesArray()
 
       beforeEach('insert articles', () => {
@@ -172,6 +176,7 @@ describe.only('Articles endpoints', function () {
 
   describe('DELETE /articles/article_id', () => {
     context('Given there are articles in db', () => {
+      const testUsers = makeUsersArray();
       const testArticles = makeArticlesArray();
 
       beforeEach('insert articles', () => {
@@ -213,6 +218,7 @@ describe.only('Articles endpoints', function () {
       })
     })
     context('Given there are articles in the db', () => {
+      const testUsers = makeUsersArray();
       const testArticles = makeArticlesArray();
 
       beforeEach('insert articles', () => {
